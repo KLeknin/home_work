@@ -8,6 +8,6 @@ import (
 
 func main() {
 	// Вывод перевернутой фразы: "Hello, OTUS!"
-	var revercedString = stringutil.Reverse("Hello, OTUS!")
+	revercedString := stringutil.Reverse("Hello, OTUS!")
 	fmt.Println(revercedString)
 }
