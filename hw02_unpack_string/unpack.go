@@ -31,7 +31,7 @@ func unpackRuneList(inRunes []rune) (string, error) {
 		default:
 			{
 				if len(inRunes) > pos+1 {
-					s, n = needDight(inRunes[pos+1:], inRunes[pos]) //ищем множитель
+					s, n = needDight(inRunes[pos+1:], inRunes[pos]) // ищем множитель
 					pos = pos + n
 					retStr.WriteString(s)
 				} else {
@@ -57,7 +57,7 @@ func unSlash(sRunes []rune) (string, int, error) {
 	case sRunes[1] == 92, unicode.IsDigit(sRunes[1]): // двойной слеш или цифра после слеша
 		{
 			if len(sRunes) >= 2 {
-				s, n := needDight(sRunes[2:], sRunes[1]) //ищем множитель
+				s, n := needDight(sRunes[2:], sRunes[1]) // ищем множитель
 				return s, 1 + n, nil
 			} else {
 				return string(sRunes[1]), 1, nil
