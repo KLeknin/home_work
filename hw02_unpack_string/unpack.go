@@ -8,99 +8,84 @@ import (
 
 var ErrInvalidString = errors.New("invalid string")
 
-func Unpack(inStr string) (string, error) {
+func unpackRuneList(inRunes []rune) (string, error) {
 	var retStr strings.Builder
 	var retErr error
-	dblSlash := false
-
-	if inStr != "" {
-		var lastRune rune
-		for _, aRune := range inStr + "e" { //добавляем один "лишний" символ для удобства, не надо будет обрабатывать "хвостик" за пределами цикла
-			aRune := aRune
-			isDight := unicode.IsDigit(aRune)
-			switch {
-			case isDight:
-				{
-					switch {
-					case unicode.IsDigit(lastRune):
-						{ //две цифры подряд
-							retErr = ErrInvalidString
-						}
-					case (lastRune == 92):
-						{ // `qwe\4\5`
-							lastRune = aRune
-							break
-						}
-					case lastRune != 0:
-						{ //"a2b3"
-
-							/* по "подсказке" надо так:
-							runeCount, err := strconv.Atoi(string(aRune))
-							if err != nil {
-								retErr = ErrInvalidString
-							}
-								но тут проще без Atoi сделать: */
-							runeCount := int(aRune - 48)
-							for i := 0; i < runeCount; i++ {
-								retStr.WriteRune(lastRune)
-							}
-							lastRune = 0
-
-						}
-					case dblSlash:
-						{ // "\\3\\5"
-							runeCount := int(aRune-48) - 1 //первый слеш уже добавлен
-							if runeCount >= 0 {
-								for i := 0; i < runeCount; i++ {
-									retStr.WriteRune(92)
-								}
-							} else {
-
-								//Есть еще такое редкое извращение "\\0"
-
-								s := retStr.String()
-								s = s[:len(s)-1] //тут можно, т.к. руна "\" занимает 1 байт
-								retStr.Reset()
-								retStr.WriteString(s)
-							}
-
-							dblSlash = false
-						}
-
-					default:
-						{
-							retErr = ErrInvalidString
-						}
-					}
-				}
-			case (lastRune == 92) && (aRune == 92): // `\\`
-				{
-					retStr.WriteRune(lastRune)
-					lastRune = 0
-					dblSlash = true
-				}
-			case (lastRune == 92):
-				{
-					retErr = ErrInvalidString
-				}
-			case lastRune != 0: //просто буква
-				{
-					retStr.WriteRune(lastRune)
-					lastRune = aRune
-				}
-			default:
-				{
-					lastRune = aRune
-					dblSlash = false
-				}
+	var inLen, pos int
+	var s string
+	var n int
+	inLen = len(inRunes)
+	retStr.Reset()
+	for (pos < inLen) && (retErr == nil) {
+		switch {
+		case inRunes[pos] == 92: // слеш
+			{
+				s, n, retErr = unSlash(inRunes[pos:])
+				pos = pos + n
+				retStr.WriteString(s)
 			}
-			if retErr != nil {
-				break
+		case unicode.IsDigit(inRunes[pos]): // цифра
+			{
+				return "", ErrInvalidString
+			}
+		default:
+			{
+				if len(inRunes) > pos+1 {
+					s, n = needDight(inRunes[pos+1:], inRunes[pos]) //ищем множитель
+					pos = pos + n
+					retStr.WriteString(s)
+				} else {
+					retStr.WriteRune(inRunes[pos])
+				}
 			}
 		}
+		if retErr != nil {
+			return "", ErrInvalidString
+		}
+		pos++
 	}
-	if retErr != nil {
-		retStr.Reset()
+	return retStr.String(), nil
+}
+
+func unSlash(sRunes []rune) (string, int, error) {
+	switch {
+	case len(sRunes) < 2:
+		{
+			return "", 0, ErrInvalidString
+		}
+
+	case sRunes[1] == 92, unicode.IsDigit(sRunes[1]): // двойной слеш или цифра после слеша
+		{
+			if len(sRunes) >= 2 {
+				s, n := needDight(sRunes[2:], sRunes[1]) //ищем множитель
+				return s, 1 + n, nil
+			} else {
+				return string(sRunes[1]), 1, nil
+			}
+		}
+
+	default:
+		{
+			return "", 0, ErrInvalidString
+		}
 	}
-	return retStr.String(), retErr
+}
+
+func needDight(sRunes []rune, aRune rune) (string, int) {
+	if (len(sRunes) >= 1) && unicode.IsDigit(sRunes[0]) {
+		n := int(sRunes[0] - 48) // Для одной цифры проще так, чем через strconv.Atoi
+		var s strings.Builder
+		s.Reset()
+		for i := 0; i < n; i++ {
+			s.WriteRune(aRune)
+		}
+		return s.String(), 1
+	} else {
+		return string(aRune), 0
+	}
+}
+
+func Unpack(inStr string) (string, error) {
+	retStr, retErr := unpackRuneList([]rune(inStr))
+	return retStr, retErr
 }
