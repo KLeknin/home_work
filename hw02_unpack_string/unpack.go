@@ -21,7 +21,7 @@ func unpackRuneList(inRunes []rune) (string, error) {
 		case inRunes[pos] == 92: // слеш
 			{
 				s, n, retErr = unSlash(inRunes[pos:])
-				pos = pos + n
+				pos += n
 				retStr.WriteString(s)
 			}
 		case unicode.IsDigit(inRunes[pos]): // цифра
@@ -32,7 +32,7 @@ func unpackRuneList(inRunes []rune) (string, error) {
 			{
 				if len(inRunes) > pos+1 {
 					s, n = needDight(inRunes[pos+1:], inRunes[pos]) // ищем множитель
-					pos = pos + n
+					pos += n
 					retStr.WriteString(s)
 				} else {
 					retStr.WriteRune(inRunes[pos])
