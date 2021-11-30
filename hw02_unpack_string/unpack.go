@@ -54,7 +54,7 @@ func unSlash(sRunes []rune) (string, int, error) {
 			return "", 0, ErrInvalidString
 		}
 
-	case sRunes[1] == 92, unicode.IsDigit(sRunes[1]): // двойной слеш или цифра после слеша
+	case sRunes[1] == 92, unicode.IsDigit(sRunes[1]): // двойной слеш, цифра после слеша
 		{
 			if len(sRunes) >= 2 {
 				s, n := needDight(sRunes[2:], sRunes[1]) // ищем множитель
