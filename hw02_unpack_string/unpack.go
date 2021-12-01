@@ -16,11 +16,14 @@ func unpackRuneList(inRunes []rune) (string, error) {
 	var n int
 	inLen = len(inRunes)
 	retStr.Reset()
-	for (pos < inLen) && (retErr == nil) {
+	for pos < inLen {
 		switch {
 		case inRunes[pos] == 92: // слеш
 			{
 				s, n, retErr = unSlash(inRunes[pos:])
+				if retErr != nil {
+					return "", ErrInvalidString
+				}
 				pos += n
 				retStr.WriteString(s)
 			}
@@ -39,50 +42,36 @@ func unpackRuneList(inRunes []rune) (string, error) {
 				}
 			}
 		}
-		if retErr != nil {
-			return "", ErrInvalidString
-		}
 		pos++
 	}
 	return retStr.String(), nil
 }
 
 func unSlash(sRunes []rune) (string, int, error) {
-	switch {
-	case len(sRunes) < 2:
-		{
-			return "", 0, ErrInvalidString
-		}
-
-	case sRunes[1] == 92, unicode.IsDigit(sRunes[1]): // двойной слеш, цифра после слеша
-		{
-			if len(sRunes) >= 2 {
-				s, n := needDight(sRunes[2:], sRunes[1]) // ищем множитель
-				return s, 1 + n, nil
-			} else {
-				return string(sRunes[1]), 1, nil
-			}
-		}
-
-	default:
-		{
-			return "", 0, ErrInvalidString
+	if (len(sRunes) > 1) && ((sRunes[1] == 92) || (unicode.IsDigit(sRunes[1]))) { // двойной слеш, цифра после слеша
+		if len(sRunes) >= 2 {
+			s, n := needDight(sRunes[2:], sRunes[1]) // ищем множитель
+			return s, 1 + n, nil
+		} else {
+			return string(sRunes[1]), 1, nil
 		}
 	}
+	return "", 0, ErrInvalidString
 }
 
 func needDight(sRunes []rune, aRune rune) (string, int) {
+	var s strings.Builder
+	s.Reset()
+	n := 1
+	k := 0
 	if (len(sRunes) >= 1) && unicode.IsDigit(sRunes[0]) {
-		n := int(sRunes[0] - 48) // Для одной цифры проще так, чем через strconv.Atoi
-		var s strings.Builder
-		s.Reset()
-		for i := 0; i < n; i++ {
-			s.WriteRune(aRune)
-		}
-		return s.String(), 1
-	} else {
-		return string(aRune), 0
+		n = int(sRunes[0] - 48) // Для одной цифры проще так, чем через strconv.Atoi
+		k = 1
 	}
+	for i := 0; i < n; i++ {
+		s.WriteRune(aRune)
+	}
+	return s.String(), k
 }
 
 func Unpack(inStr string) (string, error) {
