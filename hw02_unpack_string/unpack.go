@@ -52,9 +52,8 @@ func unSlash(sRunes []rune) (string, int, error) {
 		if len(sRunes) >= 2 {
 			s, n := needDight(sRunes[2:], sRunes[1]) // ищем множитель
 			return s, 1 + n, nil
-		} else {
-			return string(sRunes[1]), 1, nil
 		}
+		return string(sRunes[1]), 1, nil
 	}
 	return "", 0, ErrInvalidString
 }
