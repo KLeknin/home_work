@@ -79,4 +79,27 @@ func TestTop10(t *testing.T) {
 			require.Equal(t, expected, Top10(text))
 		}
 	})
+
+	t.Run("few word test", func(t *testing.T) {
+		expected := []string{
+			"а", // 2
+			"б", // 1
+		}
+		require.Equal(t, expected, Top10(`а б а`))
+	})
+
+	t.Run("return test", func(t *testing.T) {
+		expected := []string{
+			"a", // 2
+		}
+		require.Equal(t, expected, Top10(`a
+		a`))
+	})
+
+	t.Run("long space test", func(t *testing.T) {
+		expected := []string{
+			"a", // 5
+		}
+		require.Equal(t, expected, Top10(`a a  a   a    a`))
+	})
 }
