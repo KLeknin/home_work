@@ -4,6 +4,7 @@ import (
 	"sync/atomic"
 )
 
+//
 type List interface {
 	Len() int
 	Front() *ListItem

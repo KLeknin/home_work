@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+//
 func TestList(t *testing.T) {
 	t.Run("empty list", func(t *testing.T) {
 		l := newList()
