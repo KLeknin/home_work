@@ -12,7 +12,6 @@ type Cache interface {
 // 	key   Key
 // 	value interface{}
 // }
-//
 
 type lruCache struct {
 	capacity int
