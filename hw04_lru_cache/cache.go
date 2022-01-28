@@ -11,7 +11,6 @@ type Cache interface {
 // type cacheItem struct {
 // 	key   Key
 // 	value interface{}
-//
 // }
 
 type lruCache struct {
