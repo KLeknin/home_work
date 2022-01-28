@@ -51,8 +51,6 @@ func (lc *lruCache) Get(key Key) (i interface{}, ok bool) {
 }
 
 func (lc *lruCache) Clear() {
-	for lc.queue.Len() > 0 {
-		delete(lc.items, lc.queue.Back().Key)
-		lc.queue.Remove(lc.queue.Back())
-	}
+	lc.queue = newList()
+	lc.items = make(map[Key]*ListItem, lc.capacity)
 }
