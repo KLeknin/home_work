@@ -14,9 +14,8 @@ type Task func() error
 func Run(tasks []Task, n, m int) error {
 	var currentTask, errorsCount int32
 	mu := new(sync.Mutex)
-	lenTasks := len(tasks)
-	if n > lenTasks {
-		n = lenTasks
+	if n > len(tasks) {
+		n = len(tasks)
 	}
 	wg := sync.WaitGroup{}
 	wg.Add(n)
@@ -29,7 +28,7 @@ func Run(tasks []Task, n, m int) error {
 			defer wg.Done()
 			for {
 				mu.Lock()
-				if currentTask >= int32(lenTasks) || errorsCount >= int32(m) {
+				if currentTask >= int32(len(tasks)) || errorsCount >= int32(m) {
 					mu.Unlock()
 					return
 				}
