@@ -8,7 +8,7 @@ import (
 
 func TestList(t *testing.T) {
 	t.Run("empty list", func(t *testing.T) {
-		l := NewList()
+		l := newList()
 
 		require.Equal(t, 0, l.Len())
 		require.Nil(t, l.Front())
@@ -16,11 +16,30 @@ func TestList(t *testing.T) {
 	})
 
 	t.Run("complex", func(t *testing.T) {
-		l := NewList()
+		l := newList()
+		require.Equal(t, 0, l.Len())
+		require.Nil(t, l.Front())
+		require.Nil(t, l.Back())
+
+		l.PushBack(10) // [10]
+		require.Equal(t, 1, l.Len())
+		require.NotNil(t, l.Front())
+		require.NotNil(t, l.Back())
+
+		l.Remove(l.Front()) // []
+		require.Equal(t, 0, l.Len())
+		require.Nil(t, l.Front())
+		require.Nil(t, l.Back())
 
 		l.PushFront(10) // [10]
-		l.PushBack(20)  // [10, 20]
-		l.PushBack(30)  // [10, 20, 30]
+		require.Equal(t, 1, l.Len())
+		require.NotNil(t, l.Front())
+		require.NotNil(t, l.Back())
+		require.Nil(t, l.Front().Prev)
+		require.Nil(t, l.Back().Next)
+		l.PushBack(20) // [10, 20]
+		require.NotEqual(t, l.Back(), l.Front())
+		l.PushBack(30) // [10, 20, 30]
 		require.Equal(t, 3, l.Len())
 
 		middle := l.Front().Next // 20
@@ -40,12 +59,35 @@ func TestList(t *testing.T) {
 		require.Equal(t, 70, l.Back().Value)
 
 		l.MoveToFront(l.Front()) // [80, 60, 40, 10, 30, 50, 70]
-		l.MoveToFront(l.Back())  // [70, 80, 60, 40, 10, 30, 50]
+		require.Equal(t, 80, l.Front().Value)
+		require.Equal(t, 60, l.Front().Next.Value)
+		require.Equal(t, 70, l.Back().Value)
+		require.Equal(t, 50, l.Back().Prev.Value)
+		l.MoveToFront(l.Back()) // [70, 80, 60, 40, 10, 30, 50]
+		require.Equal(t, 70, l.Front().Value)
+		require.Equal(t, 50, l.Back().Value)
+		require.Equal(t, 30, l.Back().Prev.Value)
+		l.MoveToFront(l.Front().Next) // [80, 70, 60, 40, 10, 30, 50]
+		require.Equal(t, 80, l.Front().Value)
+		l.MoveToFront(l.Front().Next) // [70, 80, 60, 40, 10, 30, 50]
+		require.Equal(t, 70, l.Front().Value)
+
+		l.Remove(l.Front()) // [80, 60, 40, 10, 30, 50]
+		require.Equal(t, 6, l.Len())
+		require.Equal(t, 80, l.Front().Value)
+
+		l.Remove(l.Back()) // [80, 60, 40, 10, 30]
+		require.Equal(t, 5, l.Len())
+		require.Equal(t, 30, l.Back().Value)
+
+		require.Nil(t, l.Front().Prev)
+		require.Nil(t, l.Back().Next)
 
 		elems := make([]int, 0, l.Len())
 		for i := l.Front(); i != nil; i = i.Next {
 			elems = append(elems, i.Value.(int))
+			require.NotEqual(t, i, i.Next)
 		}
-		require.Equal(t, []int{70, 80, 60, 40, 10, 30, 50}, elems)
+		require.Equal(t, []int{80, 60, 40, 10, 30}, elems)
 	})
 }
