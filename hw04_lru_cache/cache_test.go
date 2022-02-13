@@ -10,6 +10,62 @@ import (
 )
 
 func TestCache(t *testing.T) {
+	t.Run("Clear cache", func(t *testing.T) {
+		c := NewCache(2)
+
+		wasInCache := c.Set("aaa", 100)
+		require.False(t, wasInCache)
+
+		wasInCache = c.Set("bbb", 200)
+		require.False(t, wasInCache)
+
+		c.Clear()
+
+		wasInCache = c.Set("aaa", 100)
+		require.False(t, wasInCache)
+
+		wasInCache = c.Set("bbb", 200)
+		require.False(t, wasInCache)
+	})
+
+	t.Run("Remove rare from cache", func(t *testing.T) {
+		c := NewCache(2)
+
+		wasInCache := c.Set("aaa", 100)
+		require.False(t, wasInCache)
+
+		wasInCache = c.Set("bbb", 200)
+		require.False(t, wasInCache)
+
+		wasInCache = c.Set("aaa", 100)
+		require.True(t, wasInCache)
+
+		wasInCache = c.Set("bbb", 200)
+		require.True(t, wasInCache)
+
+		wasInCache = c.Set("ccc", 200)
+		require.False(t, wasInCache)
+
+		wasInCache = c.Set("aaa", 100)
+		require.False(t, wasInCache)
+	})
+
+	t.Run("Cut long cache", func(t *testing.T) {
+		c := NewCache(2)
+
+		wasInCache := c.Set("aaa", 100)
+		require.False(t, wasInCache)
+
+		wasInCache = c.Set("bbb", 200)
+		require.False(t, wasInCache)
+
+		wasInCache = c.Set("ccc", 200)
+		require.False(t, wasInCache)
+
+		wasInCache = c.Set("aaa", 300)
+		require.False(t, wasInCache)
+	})
+
 	t.Run("empty cache", func(t *testing.T) {
 		c := NewCache(10)
 
