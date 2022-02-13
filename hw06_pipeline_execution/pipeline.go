@@ -38,6 +38,9 @@ func checkDone(in, done In) Out {
 
 func ExecutePipeline(in In, done In, stages ...Stage) Out {
 	out := in
+	if stages == nil {
+		return out
+	}
 	for _, stage := range stages {
 		out = checkDone(stage(out), done)
 	}
