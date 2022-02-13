@@ -105,6 +105,7 @@ func TestPipeline(t *testing.T) {
 		require.Equal(t, data, result)
 	})
 
+	// пустой stage
 	t.Run("nil stage", func(t *testing.T) {
 		in := make(Bi)
 		data := []int{1, 2, 3, 4, 5}
