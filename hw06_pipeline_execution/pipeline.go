@@ -38,9 +38,20 @@ func checkDone(in, done In) Out {
 
 func ExecutePipeline(in In, done In, stages ...Stage) Out {
 	out := in
+
+	if len(stages) == 0 {
+		select {
+		case <-done:
+			out := make(Bi)
+			close(out)
+			for range in {
+			}
+		default:
+		}
+	}
+
 	for _, stage := range stages {
 		out = checkDone(stage(out), done)
 	}
-
 	return out
 }
