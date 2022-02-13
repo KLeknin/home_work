@@ -105,22 +105,6 @@ func TestPipeline(t *testing.T) {
 		require.Equal(t, data, result)
 	})
 
-	// пустой stage
-	t.Run("nil stage", func(t *testing.T) {
-		in := make(Bi)
-		data := []int{1, 2, 3, 4, 5}
-
-		pushData(in, data)
-
-		result := make([]int, 0, 10)
-		emptyStage := []Stage{}
-		for s := range ExecutePipeline(in, nil, emptyStage...) {
-			result = append(result, s.(int))
-		}
-
-		require.Equal(t, data, result)
-	})
-
 	t.Run("no data", func(t *testing.T) {
 		in := make(Bi)
 		done := make(Bi)
