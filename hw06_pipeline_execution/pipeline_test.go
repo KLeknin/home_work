@@ -13,6 +13,15 @@ const (
 	fault         = sleepPerStage * 3 / 4 // Изменил, потому что маловато.
 )
 
+func pushData(in Bi, data []int) {
+	go func() {
+		for _, v := range data {
+			in <- v
+		}
+		close(in)
+	}()
+}
+
 func TestPipeline(t *testing.T) {
 	// Stage generator
 	g := func(_ string, f func(v interface{}) interface{}) Stage {
@@ -40,12 +49,7 @@ func TestPipeline(t *testing.T) {
 		in := make(Bi)
 		data := []int{1, 2, 3, 4, 5}
 
-		go func() {
-			for _, v := range data {
-				in <- v
-			}
-			close(in)
-		}()
+		pushData(in, data)
 
 		result := make([]string, 0, 10)
 		start := time.Now()
@@ -73,12 +77,7 @@ func TestPipeline(t *testing.T) {
 			close(done)
 		}()
 
-		go func() {
-			for _, v := range data {
-				in <- v
-			}
-			close(in)
-		}()
+		pushData(in, data)
 
 		result := make([]string, 0, 10)
 		start := time.Now()
@@ -95,12 +94,7 @@ func TestPipeline(t *testing.T) {
 		in := make(Bi)
 		data := []int{1, 2, 3, 4, 5}
 
-		go func() {
-			for _, v := range data {
-				in <- v
-			}
-			close(in)
-		}()
+		pushData(in, data)
 
 		result := make([]int, 0, 10)
 		emptyStage := []Stage{}
@@ -115,12 +109,7 @@ func TestPipeline(t *testing.T) {
 		in := make(Bi)
 		data := []int{1, 2, 3, 4, 5}
 
-		go func() {
-			for _, v := range data {
-				in <- v
-			}
-			close(in)
-		}()
+		pushData(in, data)
 
 		result := make([]int, 0, 10)
 		emptyStage := []Stage{}
@@ -143,12 +132,7 @@ func TestPipeline(t *testing.T) {
 			close(done)
 		}()
 
-		go func() {
-			for _, v := range data {
-				in <- v
-			}
-			close(in)
-		}()
+		pushData(in, data)
 
 		result := make([]string, 0, 10)
 		start := time.Now()
@@ -165,12 +149,7 @@ func TestPipeline(t *testing.T) {
 		in := make(Bi)
 		data := []int{}
 
-		go func() {
-			for _, v := range data {
-				in <- v
-			}
-			close(in)
-		}()
+		pushData(in, data)
 
 		result := make([]string, 0, 10)
 		start := time.Now()
