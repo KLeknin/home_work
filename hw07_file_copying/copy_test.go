@@ -39,7 +39,6 @@ func TestCopy(t *testing.T) {
 
 	for _, tstParam := range tstParams {
 		t.Run(tstParam.tstName, func(t *testing.T) {
-
 			resultFileName := tempDir + string(os.PathSeparator) + tstParam.toFile
 
 			err = Copy(tstFileName, resultFileName, tstParam.offset, tstParam.limit)
