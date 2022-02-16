@@ -49,6 +49,7 @@ func TestCopy(t *testing.T) {
 
 			resultStr := string(resultBytes)
 			require.Equal(t, tstParam.resultData, resultStr)
+
 		})
 	}
 
