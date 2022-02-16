@@ -2,10 +2,10 @@ package main
 
 import (
 	"errors"
-	"github.com/cheggaaa/pb/v3"
 	"io"
 	"os"
-	"time"
+
+	"github.com/cheggaaa/pb/v3"
 )
 
 var (
@@ -30,15 +30,19 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 		return ErrUnsupportedFile
 	}
 
-	newOffset, err := sourceFile.Seek(offset, io.SeekStart)
-	if err != nil {
-		if newOffset < offset {
-			return ErrOffsetExceedsFileSize
-		}
-		return err
+	if fi.Size() < offset {
+		return ErrOffsetExceedsFileSize
 	}
 
-	destFile, err := os.Create(toPath)
+	newOffset, err := sourceFile.Seek(offset, io.SeekStart)
+	if err != nil {
+		return err
+	}
+	if newOffset < offset {
+		return ErrOffsetExceedsFileSize
+	}
+
+	destFile, err := os.Open(toPath)
 	if err == nil || destFile != nil {
 		destFile.Close()
 		return ErrFileExist
@@ -55,6 +59,9 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 		max = fi.Size() - offset
 	}
 	bufSize := max / 100
+	if bufSize < 1 {
+		bufSize = 1
+	}
 	buf := make([]byte, bufSize)
 	var progress int64
 
@@ -79,7 +86,6 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 		}
 		progress += int64(readBites)
 		pBar.SetCurrent(progress)
-		time.Sleep(time.Millisecond * 20)
 	}
 
 	return nil
