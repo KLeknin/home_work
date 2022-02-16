@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
 )
 
 var (
@@ -28,10 +27,7 @@ func main() {
 	flag.Parse()
 	// Place your code here.
 	println(from, to, offset, limit)
-	tempDir, err := os.MkdirTemp("", "tmp")
-	check(err)
-	defer os.RemoveAll(tempDir)
 
-	err = Copy(from, to, offset, limit)
+	err := Copy(from, to, offset, limit)
 	check(err)
 }
