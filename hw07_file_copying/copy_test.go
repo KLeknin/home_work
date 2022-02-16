@@ -54,10 +54,10 @@ func TestCopy(t *testing.T) {
 
 	tstParam := tstParams[0]
 
-	// t.Run("Error File exist", func(t *testing.T) {
-	// 	err = Copy(tstFileName, tstFileName, tstParam.offset, tstParam.limit)
-	// 	require.Equal(t, ErrFileExist, err)
-	// })
+	t.Run("Error File exist", func(t *testing.T) {
+		err = Copy(tstFileName, tstFileName, tstParam.offset, tstParam.limit)
+		require.Equal(t, ErrFileExist, err)
+	})
 
 	t.Run("Error Unsupported file", func(t *testing.T) {
 		err = Copy(tempDir, tstFileName, tstParam.offset, tstParam.limit)
