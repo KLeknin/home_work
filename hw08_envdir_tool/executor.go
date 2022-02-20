@@ -21,6 +21,5 @@ func RunCmd(cmd []string, env Environment) (returnCode int) {
 	if err := cmdRun.Run(); err != nil {
 		log.Fatal(err)
 	}
-
 	return cmdRun.ProcessState.ExitCode()
 }

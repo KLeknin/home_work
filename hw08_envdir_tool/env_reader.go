@@ -44,6 +44,7 @@ func ReadDir(dir string) (Environment, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var env Environment
 	var envValue EnvValue
 	for _, f := range fi {
