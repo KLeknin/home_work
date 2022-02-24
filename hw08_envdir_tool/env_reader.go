@@ -2,10 +2,12 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 type Environment map[string]EnvValue
@@ -30,7 +32,7 @@ func fileFirstLine(fileName string) (value string, err error) {
 
 	reader := bufio.NewReader(file)
 	value, err = reader.ReadString('\n')
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		err = nil
 	}
 	if err != nil {
@@ -54,19 +56,24 @@ func ReadDir(dir string) (Environment, error) {
 	env := Environment{}
 	var envValue EnvValue
 	for _, f := range fi {
+		if strings.Index(f.Name(), "=") > 0 {
+			return nil, fmt.Errorf("errror file name %s contains \"=\"", f.Name())
+		}
 		if f.IsDir() {
 			continue
 		}
 
 		envValue = EnvValue{}
+		envValue.NeedRemove = f.Size() == 0
 		if f.Size() > 0 {
 			fullFileName := dir + string(os.PathSeparator) + f.Name()
 			envValue.Value, err = fileFirstLine(fullFileName)
 			if err != nil {
-				return nil, fmt.Errorf("errror reading file %s: %v", f.Name(), err)
+				return nil, fmt.Errorf("errror reading file %s: %w", f.Name(), err)
 			}
 		}
-		envValue.NeedRemove = envValue.Value == ""
+		envValue.Value = strings.TrimRight(envValue.Value, " \t\r")
+		envValue.Value = strings.Replace(envValue.Value, "\x00", "\n", -1)
 		env[f.Name()] = envValue
 	}
 	return env, nil

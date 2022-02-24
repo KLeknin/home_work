@@ -2,16 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
-)
 
-func check(e error) {
-	if e != nil {
-		fmt.Printf("Error: %s\n", e.Error())
-	}
-}
+	"github.com/stretchr/testify/require"
+)
 
 func envIsSame(a, b Environment) bool {
 	var s string
@@ -67,4 +62,6 @@ func TestReadDir(t *testing.T) {
 		require.Nilf(t, err, "error: %v", err)
 		require.Truef(t, envIsSame(dir, tstEnv), "environments is not same: \n%v\n%v", dir, tstEnv)
 	})
+
+	//todo "errror file name %s contains \"=\""
 }

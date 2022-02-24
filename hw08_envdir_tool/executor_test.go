@@ -1,12 +1,14 @@
 package main
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestRunCmd(t *testing.T) {
 	// Place your code here
-	require.Equal(t, 0, RunCmd([]string{"go", "version"}, Environment{}))
-
+	t.Run("Go version", func(t *testing.T) {
+		require.Equal(t, 0, RunCmd([]string{"go", "version"}, Environment{}))
+	})
 }
