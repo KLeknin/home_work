@@ -29,7 +29,7 @@ func main() {
 	if len(os.Args) < 2 {
 		log.Fatalf("not enough params")
 	}
-	envDir := os.Args[1]
+	envDir := os.Args[0]
 	envNew, err := ReadDir(envDir)
 	check(err)
 
@@ -45,7 +45,7 @@ func main() {
 		env[keyName] = newValue
 	}
 
-	RunCmd(os.Args[2:], env)
+	RunCmd(os.Args[1:], env)
 }
 
 func check(e error) {
