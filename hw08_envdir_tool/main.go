@@ -4,61 +4,48 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
-func deleteKey(env *[]string, keyName string) {
-	keyLen := len(keyName)
-	envLen := len(*env)
-	for i, keyStr := range *env {
-		if keyStr[:keyLen] == keyName && keyStr[keyLen:keyLen] == "=" {
-			(*env)[i] = (*env)[envLen-1]
-			(*env)[envLen-1] = ""
-			*env = (*env)[:envLen-1]
-			break
+func envPrepare(env []string) Environment {
+	result := make(Environment, len(env))
+	for _, envStr := range env {
+		ss := strings.SplitN(envStr, "=", 2)
+		if len(ss) == 0 {
+			continue
 		}
-	}
-}
-
-func replaceKeyValue(env *[]string, keyName, keyValue string) bool {
-	keyLen := len(keyName)
-	for i, keyStr := range *env {
-		if keyStr[:keyLen] == keyName && keyStr[keyLen:keyLen] == "=" {
-			(*env)[i] = keyStr[:keyLen] + "=" + keyValue
-			return true
+		envName := ss[0]
+		envValue := EnvValue{}
+		if len(ss) > 1 {
+			envValue.Value = ss[1]
 		}
+		result[envName] = envValue
 	}
-	return false
+	return result
 }
 
 func main() {
-	//go-envdir /path/to/env/dir command arg1 arg2
+	// go-envdir /path/to/env/dir command arg1 arg2
 	if len(os.Args) < 2 {
 		log.Fatalf("not enough params")
 	}
 	envDir := os.Args[1]
 	envNew, err := ReadDir(envDir)
 	check(err)
-	env := os.Environ()
 
-	for e := range envNew {
-		if envNew[e].NeedRemove {
-			deleteKey(&env, e)
+	env := envPrepare(os.Environ())
+
+	for keyName := range envNew {
+		if envNew[keyName].NeedRemove {
+			delete(env, keyName)
 			continue
 		}
-		if !replaceKeyValue(&env, e, envNew[e].Value) {
-			//todo addNewKey+Value
-		}
+		newValue := EnvValue{}
+		newValue.Value = envNew[keyName].Value
+		env[keyName] = newValue
 	}
 
-	//todo testit:
-	//env := []string{"a=1", "b=2", "c=3"}
-	//fmt.Printf("%v\n", env)
-	//deleteKey(&env, "a")
-	//fmt.Printf("%v\n", env)
-
-	//commandName := os.Args[2]
-	//commandParams := os.Args[3:]
-
+	RunCmd(os.Args[2:], env)
 }
 
 func check(e error) {

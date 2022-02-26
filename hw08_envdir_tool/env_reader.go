@@ -55,9 +55,10 @@ func ReadDir(dir string) (Environment, error) {
 
 	env := Environment{}
 	var envValue EnvValue
+
 	for _, f := range fi {
 		if strings.Index(f.Name(), "=") > 0 {
-			return nil, fmt.Errorf("errror file name %s contains \"=\"", f.Name())
+			return nil, fmt.Errorf("error file name %s contains \"=\"", f.Name())
 		}
 		if f.IsDir() {
 			continue
@@ -69,11 +70,11 @@ func ReadDir(dir string) (Environment, error) {
 			fullFileName := dir + string(os.PathSeparator) + f.Name()
 			envValue.Value, err = fileFirstLine(fullFileName)
 			if err != nil {
-				return nil, fmt.Errorf("errror reading file %s: %w", f.Name(), err)
+				return nil, fmt.Errorf("error reading file %s: %w", f.Name(), err)
 			}
 		}
 		envValue.Value = strings.TrimRight(envValue.Value, " \t\r")
-		envValue.Value = strings.Replace(envValue.Value, "\x00", "\n", -1)
+		envValue.Value = strings.ReplaceAll(envValue.Value, "\x00", "\n")
 		env[f.Name()] = envValue
 	}
 	return env, nil

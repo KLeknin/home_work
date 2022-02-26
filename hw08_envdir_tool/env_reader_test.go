@@ -53,7 +53,7 @@ func TestReadDir(t *testing.T) {
 		check(err)
 		tstFile.Close()
 	}
-	emptyValue := EnvValue{"", true}
+	emptyValue := EnvValue{"", false}
 	tstEnv["fifth"] = emptyValue
 	tstEnv["sixth"] = emptyValue
 
@@ -63,5 +63,15 @@ func TestReadDir(t *testing.T) {
 		require.Truef(t, envIsSame(dir, tstEnv), "environments is not same: \n%v\n%v", dir, tstEnv)
 	})
 
-	//todo "errror file name %s contains \"=\""
+	t.Run("FileNameContains= Test", func(t *testing.T) {
+		tstFileName := tempDir + string(os.PathSeparator) + "test=fileName"
+		tstFile, err = os.Create(tstFileName)
+		check(err)
+		tstFile.Close()
+
+		dir, err := ReadDir(tempDir)
+		_ = dir
+		expMsg := "error file name test=fileName contains \"=\""
+		require.Equalf(t, err.Error(), expMsg, "no error file name contains \"=\", %w", err)
+	})
 }
