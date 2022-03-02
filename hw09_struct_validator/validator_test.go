@@ -58,3 +58,15 @@ func TestValidate(t *testing.T) {
 		})
 	}
 }
+
+func TestMe(t *testing.T) {
+	str := struct {
+		sl []string `validate:"in:200,404,500"`
+		s  string   `validate:"in:200,404,500"`
+		i  int      `validate:"in:200,404,500"`
+	}{}
+	str.sl = []string{"a", "b"}
+	str.s = "my string"
+	str.i = 123
+	Validate(str)
+}
