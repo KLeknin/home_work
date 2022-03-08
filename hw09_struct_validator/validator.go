@@ -13,10 +13,16 @@ type ValidationError struct {
 	Err   error
 }
 
+func (v *ValidationError) Error() string { return v.Field + ": " + v.Err.Error() }
+
 type ValidationErrors []ValidationError
 
-func (v ValidationErrors) Error() string {
-	panic("implement me")
+func (v *ValidationErrors) Error() string {
+	s := ""
+	for _, e := range *v {
+		s += e.Error() + "\n"
+	}
+	return s
 }
 
 func validateString(s, tags string) (err error, vErr []ValidationError) {
@@ -33,7 +39,7 @@ func validateString(s, tags string) (err error, vErr []ValidationError) {
 		switch tagKeyValue[0] {
 		case "len": //len:32 - длина строки должна быть ровно 32 символа;
 			{
-				lenExpected, err := strconv.Atoi(tagKeyValue[1])
+				lenExpected, err := strconv.Atoi(strings.TrimSpace(tagKeyValue[1]))
 				if err != nil {
 					return fmt.Errorf("tag key wrong parametr:\"%v\"", oneTag), vErr
 				}
@@ -68,9 +74,60 @@ func validateString(s, tags string) (err error, vErr []ValidationError) {
 	}
 	return nil, vErr
 }
-func validateInt(i int64, tag string) (err error, vErr ValidationErrors) {
+func validateInt(i int64, tags string) (err error, vErr []ValidationError) {
 	vErr = make([]ValidationError, 0, 0)
-	//tagKeyValue := make([]string, 0, 2)
+	tagKeyValue := make([]string, 0, 2)
+	for _, oneTag := range strings.Split(tags, "|") {
+		if oneTag == "" {
+			continue
+		}
+		tagKeyValue = strings.SplitN(oneTag, ":", 2)
+		if len(tagKeyValue) < 2 || tagKeyValue[1] == "" {
+			return fmt.Errorf("tag key without value:\"%v\"", oneTag), vErr
+		}
+		switch tagKeyValue[0] {
+		case "min": //min:10 - число не может быть меньше 10;
+			{
+				min, err := strconv.Atoi(strings.TrimSpace(tagKeyValue[1]))
+				if err != nil {
+					return fmt.Errorf("tag key wrong parametr:\"%v\"", oneTag), vErr
+				}
+				if i < int64(min) {
+					vErr = append(vErr, ValidationError{strconv.Itoa(int(i)),
+						fmt.Errorf("value too small: %v < %v, %v", i, min, oneTag)})
+				}
+			}
+		case "max": //max:20 - число не может быть больше 20;
+			{
+				max, err := strconv.Atoi(strings.TrimSpace(tagKeyValue[1]))
+				if err != nil {
+					return fmt.Errorf("tag key wrong parametr:\"%v\"", oneTag), vErr
+				}
+				if i > int64(max) {
+					vErr = append(vErr, ValidationError{strconv.Itoa(int(i)),
+						fmt.Errorf("value too big: %v > %v, %v", i, max, oneTag)})
+				}
+			}
+		case "in": //in:256,1024 - число должно входить в множество чисел {256, 1024};
+			{
+				found := false
+				for _, str := range strings.Split(tagKeyValue[1], ",") {
+					j, err := strconv.Atoi(strings.TrimSpace(str))
+					if err != nil {
+						return fmt.Errorf("not integer value in parametr:\"%v\", error:%v", oneTag, err.Error()), vErr
+					}
+					if int64(j) == i {
+						found = true
+						break
+					}
+				}
+				if !found {
+					vErr = append(vErr, ValidationError{strconv.Itoa(int(i)),
+						fmt.Errorf("integer \"%v\" dont in tag list \"%v\"", i, oneTag)})
+				}
+			}
+		}
+	}
 	return nil, vErr
 }
 
@@ -83,9 +140,8 @@ func Validate(v interface{}) error {
 	if vr.Kind() != reflect.Struct { //todo test
 		return fmt.Errorf("data is not structure: %v", v)
 	}
-
-	validationErrors := make([]ValidationError, 0)
-	vErr := make([]ValidationError, 0)
+	var validationErrors ValidationErrors
+	var vErr []ValidationError
 	var err error
 	st := reflect.ValueOf(v)
 	for i := 0; i < st.NumField(); i++ {
@@ -99,26 +155,34 @@ func Validate(v interface{}) error {
 		switch fieldValue.Kind() {
 		case reflect.Slice:
 			{
-				for i := 0; i < fieldValue.Len(); i++ {
-					fv := fieldValue.Index(i)
+				for j := 0; j < fieldValue.Len(); j++ {
+					fv := fieldValue.Index(j)
 					switch fv.Kind() {
 					case reflect.String:
 						err, vErr = validateString(fv.String(), tagStr)
 					case reflect.Int:
 						err, vErr = validateInt(fv.Int(), tagStr)
 					}
-					//todo обработать err
+					if err != nil {
+						return fmt.Errorf("error in field %v, element %v, tag \"%v\": %v", fieldValue.String(), j, tagStr, err.Error())
+					}
 					validationErrors = append(validationErrors, vErr...)
+					vErr = []ValidationError{}
 				}
 			}
 		case reflect.String:
 			err, vErr = validateString(fieldValue.String(), tagStr)
-			//todo обработать err
 		case reflect.Int:
 			err, vErr = validateInt(fieldValue.Int(), tagStr)
-			//todo обработать err
 		}
+		if err != nil {
+			return fmt.Errorf("error in field %v, tag \"%v\": %v", fieldValue.String(), tagStr, err.Error())
+		}
+		validationErrors = append(validationErrors, vErr...)
+		vErr = []ValidationError{}
 	}
-	_ = err
+	if len(validationErrors) > 0 {
+		return &validationErrors
+	}
 	return nil
 }
