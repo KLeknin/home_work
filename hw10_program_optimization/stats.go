@@ -1,12 +1,12 @@
 package hw10programoptimization
 
 import (
-	"encoding/json"
-	"fmt"
+	"bufio"
+	"errors"
 	"io"
-	"io/ioutil"
-	"regexp"
 	"strings"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 type User struct {
@@ -21,47 +21,45 @@ type User struct {
 
 type DomainStat map[string]int
 
+var ErrNilInput = errors.New("nil input")
+
 func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
-	u, err := getUsers(r)
-	if err != nil {
-		return nil, fmt.Errorf("get users error: %w", err)
+	if r == nil {
+		return nil, ErrNilInput
 	}
-	return countDomains(u, domain)
-}
-
-type users [100_000]User
-
-func getUsers(r io.Reader) (result users, err error) {
-	content, err := ioutil.ReadAll(r)
-	if err != nil {
-		return
-	}
-
-	lines := strings.Split(string(content), "\n")
-	for i, line := range lines {
-		var user User
-		if err = json.Unmarshal([]byte(line), &user); err != nil {
-			return
-		}
-		result[i] = user
-	}
-	return
-}
-
-func countDomains(u users, domain string) (DomainStat, error) {
-	result := make(DomainStat)
-
-	for _, user := range u {
-		matched, err := regexp.Match("\\."+domain, []byte(user.Email))
-		if err != nil {
+	reader := bufio.NewReader(r)
+	var user User
+	var err error
+	domainStat := make(DomainStat)
+	for {
+		line, readError := reader.ReadSlice(byte('\n'))
+		if readError != nil && !errors.Is(readError, io.EOF) {
 			return nil, err
 		}
+		if len(line) < 1 {
+			line = []byte("{}")
+		}
 
-		if matched {
-			num := result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])]
-			num++
-			result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])] = num
+		if err = jsoniter.Unmarshal(line, &user); err != nil {
+			return nil, err
+		}
+		domainName := getDomainName(user, domain)
+		if domainName > "" {
+			domainStat[domainName]++
+		}
+
+		if errors.Is(readError, io.EOF) {
+			break
 		}
 	}
-	return result, nil
+	return domainStat, nil
+}
+
+func getDomainName(u User, domain string) (domainName string) {
+	domainName = ""
+	if strings.HasSuffix(u.Email, "."+domain) {
+		dogPlace := strings.Index(u.Email, "@")
+		domainName = strings.ToLower(u.Email[dogPlace+1:])
+	}
+	return
 }
