@@ -28,7 +28,7 @@ func NewTelnetClient(address string, timeout time.Duration, in io.ReadCloser, ou
 func (c *TelnetClient) Connect() error {
 	conn, err := net.DialTimeout("tcp", c.address, c.timeout)
 	if err != nil {
-		return fmt.Errorf("dial error^ %w", err)
+		return fmt.Errorf("dial error: %w", err)
 	}
 
 	c.conn = conn
