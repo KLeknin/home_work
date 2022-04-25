@@ -12,6 +12,24 @@ import (
 )
 
 func TestTelnetClient(t *testing.T) {
+	t.Run("timeout", func(t *testing.T) {
+		client := NewTelnetClient("127.0.0.1:", 1, nil, nil)
+		err := client.Connect()
+		require.Equal(t, err.Error(), "dial error: dial tcp 127.0.0.1:0: i/o timeout")
+	})
+
+	t.Run("bad port", func(t *testing.T) {
+		client := NewTelnetClient(".", 1, nil, nil)
+		err := client.Connect()
+		require.Equal(t, err.Error(), "dial error: dial tcp: address .: missing port in address")
+	})
+
+	t.Run("missing address", func(t *testing.T) {
+		client := NewTelnetClient("", 1, nil, nil)
+		err := client.Connect()
+		require.Equal(t, err.Error(), "dial error: dial tcp: missing address")
+	})
+
 	t.Run("basic", func(t *testing.T) {
 		l, err := net.Listen("tcp", "127.0.0.1:")
 		require.NoError(t, err)
